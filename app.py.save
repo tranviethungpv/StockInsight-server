@@ -8,7 +8,6 @@ import json
 import threading
 import time
 from datetime import datetime, timedelta
-from all_symbols import all_symbols
 import requests
 
 app = Flask(__name__)
@@ -119,6 +118,23 @@ def get_stock_info(symbol, interval, period):
     combined_data = {"quoteInfo": quote_info, "historicData": historic_data_json}
     return combined_data
 
+
+def get_symbols_from_tiingo(query):
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    api_key = '545d334200109fd736db6e79fce6999f32538f5f'
+    url = f"https://api.tiingo.com/tiingo/utilities/search?query={query}&token={api_key}"
+    requestResponse = requests.get(url, headers=headers)
+    
+    # Parse the JSON response
+    data = requestResponse.json()
+    
+    # Extract the list of tickers
+    tickers = [item['ticker'] for item in data]
+    
+    return tickers
+
 @app.route('/')
 def hello():
     return 'Hello, World!'
@@ -217,47 +233,5 @@ def handle_disconnect():
         del clients[client_id]
     print('Client disconnected')
 
-
-@socketio.on('stock_request_search')
-def handle_stock_request_search(json_data):
-    client_id = request.sid
-    keyword = json_data['keyword'].upper()  # Assuming keyword is passed and should be case-insensitive
-    interval = json_data['interval']
-    range = json_data['range']
-
-    # Filter symbols based on the keyword
-    matched_symbols = [symbol for symbol in all_symbols if keyword in symbol]
-
-    if client_id not in clients:
-        clients[client_id] = {}
-
-    if 'search' in clients[client_id]:
-        clients[client_id]['search']['stop_event'].set()  # Stop any previous requests
-    
-    stop_event = threading.Event()
-    clients[client_id]['search'] = {
-        'symbols': matched_symbols,
-        'interval': interval,
-        'range': range,
-        'stop_event': stop_event
-    }
-
-    def send_stock_updates(client_id, request_type):
-        while not clients[client_id][request_type]['stop_event'].is_set():
-            combined_data = []
-            for symbol in clients[client_id][request_type]['symbols']:
-                stock_data = get_stock_info(
-                    symbol,
-                    clients[client_id][request_type]['interval'],
-                    clients[client_id][request_type]['range']
-                )
-                combined_data.append(stock_data)
-            socketio.emit(f'stock_update_{request_type}', combined_data, to=client_id)
-            time.sleep(3)
-    
-    thread = threading.Thread(target=send_stock_updates, args=(client_id, 'search'))
-    thread.start()
-
-
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketi

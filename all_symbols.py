@@ -1,0 +1,1 @@
+all_symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'FB', 'TWTR', 'TSLA', 'INTC', 'AMD', 'NVDA']
