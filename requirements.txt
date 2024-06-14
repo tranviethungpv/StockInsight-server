@@ -1,4 +1,4 @@
 flask==3.0.2
 gunicorn==21.2.0
 wfastcgi==3.0.0
-yfinance==0.2.37
+yfinance==0.2.40
